@@ -1,0 +1,245 @@
+/* ==========================================================================
+   Design System & Tokens
+   ========================================================================== */
+   
+:root {
+  /* Color Palette - Premium Indigo/Slate */
+  --bg-primary: #f8fafc; /* Subtle off-white for depth */
+  --bg-secondary: #ffffff;
+  --bg-elevated: #ffffff;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  
+  --brand-primary: #3b82f6; /* Vibrant Sky Blue */
+  --brand-primary-hover: #2563eb;
+  --brand-secondary: #60a5fa; /* Light Sky Blue */
+  
+  --status-success: #10b981;
+  --status-error: #ef4444;
+  --status-warning: #f59e0b;
+  
+  --border-color: rgba(226, 232, 240, 0.8);
+  
+  /* Glassmorphism Elite */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+  --glass-blur: 20px;
+
+  /* Spacing System */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-12: 3rem;
+
+  /* Shadows & Depth (Apple/Stripe Style) */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-elite: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+
+  /* Radii */
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 9999px;
+
+  /* Motion */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  --font-system: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Dark Mode Tokens */
+[data-theme='dark'] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-elevated: #334155;
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  
+  --brand-primary: #3b82f6;
+  --brand-primary-hover: #2563eb;
+  --brand-secondary: #60a5fa;
+  
+  --border-color: #334155;
+
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* System dark mode default if no data-theme is set */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-elevated: #334155;
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+    
+    --brand-primary: #3b82f6;
+    --brand-primary-hover: #2563eb;
+    --brand-secondary: #60a5fa;
+    
+    --border-color: #334155;
+
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ==========================================================================
+   Global Reset & Base Styles
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+a {
+  color: var(--brand-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--brand-primary-hover);
+}
+
+/* ==========================================================================
+   Layout Components
+   ========================================================================== */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: var(--glass-shadow);
+}
+
+.header-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--spacing-4) var(--spacing-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-main {
+  flex: 1;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--spacing-8) var(--spacing-6);
+}
+
+.app-footer {
+  text-align: center;
+  padding: var(--spacing-6);
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+}
+
+/* ==========================================================================
+   Utility Classes & Components
+   ========================================================================== */
+.btn-primary {
+  background-color: var(--brand-primary);
+  color: white;
+  border: none;
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-primary-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-elevated);
+  border-color: var(--text-muted);
+}
+
+.error-fallback-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--spacing-4);
+}
+
+.error-card {
+  background-color: var(--bg-elevated);
+  padding: var(--spacing-8);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.error-message {
+  color: var(--status-error);
+  margin: var(--spacing-4) 0;
+  font-family: monospace;
+}
