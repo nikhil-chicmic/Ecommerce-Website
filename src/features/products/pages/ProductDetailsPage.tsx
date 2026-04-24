@@ -129,14 +129,42 @@ export const ProductDetailsPage: React.FC = () => {
           </div>
 
           {/* AI Decision Layer */}
-          <div className="ai-glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-xl)', borderLeft: '4px solid var(--brand-secondary)', background: 'rgba(139, 92, 246, 0.03)' }}>
+          <div className="ai-glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-xl)', borderLeft: '4px solid var(--brand-secondary)', background: 'rgba(139, 92, 246, 0.03)', minHeight: '340px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
               <Sparkles size={18} color="var(--brand-secondary)" />
               <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Neural Insights</h3>
             </div>
             
             {!aiInsights ? (
-              <div className="shimmer" style={{ height: '100px', borderRadius: '8px' }}></div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div className="shimmer" style={{ height: '16px', width: '100%', borderRadius: '4px' }}></div>
+                  <div className="shimmer" style={{ height: '16px', width: '95%', borderRadius: '4px' }}></div>
+                  <div className="shimmer" style={{ height: '16px', width: '90%', borderRadius: '4px' }}></div>
+                  <div className="shimmer" style={{ height: '16px', width: '60%', borderRadius: '4px' }}></div>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div className="shimmer" style={{ height: '14px', width: '60%', borderRadius: '4px', marginBottom: '4px' }}></div>
+                    <div className="shimmer" style={{ height: '10px', width: '90%', borderRadius: '4px' }}></div>
+                    <div className="shimmer" style={{ height: '10px', width: '85%', borderRadius: '4px' }}></div>
+                    <div className="shimmer" style={{ height: '10px', width: '95%', borderRadius: '4px' }}></div>
+                    <div className="shimmer" style={{ height: '10px', width: '80%', borderRadius: '4px' }}></div>
+                    <div className="shimmer" style={{ height: '10px', width: '70%', borderRadius: '4px' }}></div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div className="shimmer" style={{ height: '14px', width: '60%', borderRadius: '4px', marginBottom: '4px' }}></div>
+                    <div className="shimmer" style={{ height: '10px', width: '85%', borderRadius: '4px' }}></div>
+                    <div className="shimmer" style={{ height: '10px', width: '90%', borderRadius: '4px' }}></div>
+                    <div className="shimmer" style={{ height: '10px', width: '75%', borderRadius: '4px' }}></div>
+                    <div className="shimmer" style={{ height: '10px', width: '80%', borderRadius: '4px' }}></div>
+                    <div className="shimmer" style={{ height: '10px', width: '65%', borderRadius: '4px' }}></div>
+                  </div>
+                </div>
+
+                <div className="shimmer" style={{ height: '80px', width: '100%', borderRadius: '16px' }}></div>
+              </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <p style={{ fontSize: '0.9375rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>{aiInsights.summary}</p>
