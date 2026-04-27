@@ -4,13 +4,14 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { CheckCircle, AlertTriangle, ShieldCheck, CreditCard, ArrowLeft } from 'lucide-react';
 import type { RootState } from '../../../store';
 import { usePayment } from '../hooks/usePayment';
+import { useCart } from '../../cart/hooks/useCart';
 import { RazorpaySimulationModal } from '../components/RazorpaySimulationModal';
 import '../styles/payment.css';
 
 export const CheckoutPage: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items, totalAmount } = useSelector((state: RootState) => state.cart);
+  const { items, totalAmount } = useCart();
   const { currentOrder, isProcessing, error, showMockModal, initiateCheckout, handlePaymentSuccess, handlePaymentFailure } = usePayment();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 

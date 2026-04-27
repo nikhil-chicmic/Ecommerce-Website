@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import './Auth.css';
 
@@ -9,7 +9,7 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{email?: string, password?: string}>({});
-  const { login, isLoading, error, isAuthenticated, resetError } = useAuth();
+  const { login, loginWithGoogle, isLoading, error, isAuthenticated, resetError } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,19 +32,25 @@ export const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    await login({ email, password });
+    try {
+      await login({ email, password });
+    } catch (err) {
+      // Error handled by mutation onError in useAuth
+    }
   };
 
   return (
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <img src="/logo.png" alt="AIStore Logo" style={{ height: '48px', width: 'auto', marginBottom: '16px', borderRadius: '4px' }} />
+          <div style={{ width: '48px', height: '48px', background: 'var(--brand-primary)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <span style={{ color: 'white', fontWeight: 800, fontSize: '1.25rem' }}>AI</span>
+          </div>
           <h2>Welcome Back</h2>
           <p>Sign in to continue your journey</p>
         </div>
 
-        {error && <div className="auth-error">{error}</div>}
+
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
@@ -95,7 +101,12 @@ export const LoginPage: React.FC = () => {
           <span>OR</span>
         </div>
 
-        <button className="btn-google" type="button" disabled={isLoading}>
+        <button 
+          className="btn-google" 
+          type="button" 
+          disabled={isLoading}
+          onClick={() => loginWithGoogle()}
+        >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>

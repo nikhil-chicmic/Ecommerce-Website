@@ -1,71 +1,143 @@
+import { supabase } from '../../../lib/supabase';
 import type { LoginCredentials, RegisterCredentials, AuthResponse, User } from '../types';
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-const USERS_KEY = 'registered_users';
-
-const getUsers = (): (User & { password?: string })[] => {
-  try {
-    const data = localStorage.getItem(USERS_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveUsers = (users: any[]) => {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-};
 
 export const authApi = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    await delay(1000); // Simulate network latency
-    
-    if (!credentials.email || !credentials.password) {
-      throw new Error('Email and password are required');
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: credentials.email,
+      password: credentials.password,
+    });
+
+    if (error) throw error;
+
+    if (!data.user || !data.session) {
+      throw new Error('Authentication failed');
     }
 
-    const users = getUsers();
-    const user = users.find(u => u.email === credentials.email && u.password === credentials.password);
+    // Fetch profile data
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
 
-    if (user) {
-      // Don't leak password in state
-      const { password, ...safeUser } = user;
-      return {
-        user: safeUser as User,
-        token: `jwt_${Math.random().toString(36).substring(2)}_${safeUser.id}`,
-      };
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
     }
-    
-    throw new Error('Invalid email or password');
+
+    const user: User = {
+      id: data.user.id,
+      email: data.user.email || '',
+      name: profile?.full_name || data.user.user_metadata?.full_name || 'User',
+      avatar: profile?.avatar_url || data.user.user_metadata?.avatar_url,
+    };
+
+    return {
+      user,
+      token: data.session.access_token,
+    };
   },
 
   async register(credentials: RegisterCredentials): Promise<AuthResponse> {
-    await delay(1200); // Simulate network latency
-    
-    if (!credentials.email || !credentials.password || !credentials.name) {
-      throw new Error('All fields are required');
-    }
-
-    const users = getUsers();
-    if (users.some(u => u.email === credentials.email)) {
-      throw new Error('An account with this email already exists');
-    }
-
-    const newUser = {
-      id: Math.random().toString(36).substring(2, 9),
+    const { data, error } = await supabase.auth.signUp({
       email: credentials.email,
+      password: credentials.password,
+      options: {
+        data: {
+          full_name: credentials.name,
+        },
+      },
+    });
+
+    if (error) throw error;
+
+    if (!data.user) {
+      throw new Error('Registration failed');
+    }
+
+    // Create profile in profiles table
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert([
+        {
+          id: data.user.id,
+          email: credentials.email,
+          full_name: credentials.name,
+          provider: 'email',
+        },
+      ]);
+
+    if (profileError) {
+      console.error('Error creating profile:', profileError);
+    }
+
+    const user: User = {
+      id: data.user.id,
+      email: data.user.email || '',
       name: credentials.name,
-      password: credentials.password, // Stored locally for mock verification
     };
-
-    saveUsers([...users, newUser]);
-
-    const { password, ...safeUser } = newUser;
 
     return {
-      user: safeUser as User,
-      token: `jwt_new_${safeUser.id}`,
+      user,
+      token: data.session?.access_token || '',
     };
-  }
+  },
+
+  async loginWithGoogle() {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) throw error;
+    return data;
+  },
+
+  async logout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  },
+
+  async syncProfile(user: any): Promise<void> {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile) {
+      await supabase.from('profiles').insert([
+        {
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          avatar_url: user.user_metadata?.avatar_url,
+          provider: user.app_metadata?.provider || 'email',
+        },
+      ]);
+    }
+  },
+
+  async getCurrentUser(): Promise<User | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    // Ensure profile exists (especially for OAuth users)
+    await this.syncProfile(user);
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    return {
+      id: user.id,
+      email: user.email || '',
+      name: profile?.full_name || user.user_metadata?.full_name || 'User',
+      avatar: profile?.avatar_url || user.user_metadata?.avatar_url,
+    };
+  },
 };

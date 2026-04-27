@@ -1,18 +1,33 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { CartState } from '../types';
+import type { CartState, CartData } from '../types';
 import type { Product } from '../../products/types';
 
-const initialState: CartState = {
+const initialCartData: CartData = {
   items: [],
   totalQuantity: 0,
   totalAmount: 0,
-  isCartOpen: false
 };
 
-const calculateTotals = (state: CartState) => {
-  state.totalQuantity = state.items.reduce((total, item) => total + item.quantity, 0);
-  state.totalAmount = state.items.reduce((total, item) => {
+const initialState: CartState = {
+  carts: {
+    guest: initialCartData,
+  },
+  isCartOpen: false,
+  activeUserKey: 'guest',
+};
+
+const getActiveCart = (state: CartState): CartData => {
+  const key = state.activeUserKey;
+  if (!state.carts[key]) {
+    state.carts[key] = { items: [], totalQuantity: 0, totalAmount: 0 };
+  }
+  return state.carts[key];
+};
+
+const calculateTotals = (cart: CartData) => {
+  cart.totalQuantity = cart.items.reduce((total, item) => total + item.quantity, 0);
+  cart.totalAmount = cart.items.reduce((total, item) => {
     const price = item.discountPercentage 
       ? item.price * (1 - item.discountPercentage / 100)
       : item.price;
@@ -24,37 +39,44 @@ const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    setCart(state, action: PayloadAction<CartState>) {
-      return { ...action.payload, isCartOpen: false };
+    setActiveUser(state, action: PayloadAction<string | null>) {
+      state.activeUserKey = action.payload || 'guest';
+    },
+    setCart(state, action: PayloadAction<CartData>) {
+      state.carts[state.activeUserKey] = action.payload;
     },
     addToCart(state, action: PayloadAction<Product>) {
-      const existingItem = state.items.find(item => String(item.id) === String(action.payload.id));
+      const cart = getActiveCart(state);
+      const existingItem = cart.items.find(item => String(item.id) === String(action.payload.id));
       if (existingItem) {
         existingItem.quantity += 1;
       } else {
-        state.items.push({ ...action.payload, quantity: 1 });
+        cart.items.push({ ...action.payload, quantity: 1 });
       }
-      calculateTotals(state);
+      calculateTotals(cart);
     },
     removeFromCart(state, action: PayloadAction<string | number>) {
-      state.items = state.items.filter(item => String(item.id) !== String(action.payload));
-      calculateTotals(state);
+      const cart = getActiveCart(state);
+      cart.items = cart.items.filter(item => String(item.id) !== String(action.payload));
+      calculateTotals(cart);
     },
     updateQuantity(state, action: PayloadAction<{ id: string | number; quantity: number }>) {
-      const item = state.items.find(item => String(item.id) === String(action.payload.id));
+      const cart = getActiveCart(state);
+      const item = cart.items.find(item => String(item.id) === String(action.payload.id));
       if (item) {
         if (action.payload.quantity <= 0) {
-          state.items = state.items.filter(i => String(i.id) !== String(action.payload.id));
+          cart.items = cart.items.filter(i => String(i.id) !== String(action.payload.id));
         } else {
           item.quantity = action.payload.quantity;
         }
       }
-      calculateTotals(state);
+      calculateTotals(cart);
     },
     clearCart(state) {
-      state.items = [];
-      state.totalQuantity = 0;
-      state.totalAmount = 0;
+      const cart = getActiveCart(state);
+      cart.items = [];
+      cart.totalQuantity = 0;
+      cart.totalAmount = 0;
     },
     toggleCart(state) {
       state.isCartOpen = !state.isCartOpen;
@@ -65,5 +87,5 @@ const cartSlice = createSlice({
   },
 });
 
-export const { setCart, addToCart, removeFromCart, updateQuantity, clearCart, toggleCart, closeCart } = cartSlice.actions;
+export const { setActiveUser, setCart, addToCart, removeFromCart, updateQuantity, clearCart, toggleCart, closeCart } = cartSlice.actions;
 export const cartReducer = cartSlice.reducer;
