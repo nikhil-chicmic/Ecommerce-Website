@@ -31,7 +31,7 @@ export const CheckoutPage: React.FC = () => {
           </div>
           <h2 style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '12px' }}>Order Secured</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '400px', margin: '0 auto 40px' }}>
-            Intelligence confirmed. Your order <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>#{currentOrder.id.slice(-8).toUpperCase()}</span> is now being processed by our neural fulfillment network.
+            Success! Your order <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>#{currentOrder.id.slice(-8).toUpperCase()}</span> is now being processed by our secure fulfillment network.
           </p>
           
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
@@ -66,8 +66,8 @@ export const CheckoutPage: React.FC = () => {
       </button>
 
       <div style={{ marginBottom: '48px' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '8px' }}>Finalize Intelligence</h1>
-        <p style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Review your neural curation before secure fulfillment.</p>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '8px' }}>Finalize Order</h1>
+        <p style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Review your selected items before secure fulfillment.</p>
       </div>
 
       {error && (
@@ -110,7 +110,7 @@ export const CheckoutPage: React.FC = () => {
                 <span>${totalAmount.toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
-                <span>Neural Fulfillment (Shipping)</span>
+                <span>Secure Shipping</span>
                 <span style={{ color: 'var(--status-success)', fontWeight: 700 }}>COMPLIMENTARY</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem', fontWeight: 800, borderTop: '1px solid var(--border-color)', paddingTop: '24px', marginTop: '8px' }}>
@@ -123,7 +123,7 @@ export const CheckoutPage: React.FC = () => {
               <label style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', border: '2px solid var(--brand-primary)', borderRadius: '16px', background: 'rgba(59, 130, 246, 0.05)', cursor: 'pointer' }}>
                 <input type="radio" name="payment_method" defaultChecked />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700 }}>Neural Pay (Razorpay)</div>
+                  <div style={{ fontWeight: 700 }}>Instant Pay (Razorpay)</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Cards, UPI, NetBanking</div>
                 </div>
               </label>

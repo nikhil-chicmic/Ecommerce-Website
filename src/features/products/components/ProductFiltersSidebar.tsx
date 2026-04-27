@@ -36,7 +36,12 @@ export const ProductFiltersSidebar: React.FC<Props> = ({ filters, onFilterChange
       <div className="filter-section">
         <h3>Categories</h3>
         {isLoading ? (
-          <div className="skeleton-text"></div>
+          <div className="category-skeleton-list">
+            <div className="skeleton-text" style={{ width: '100%' }}></div>
+            <div className="skeleton-text" style={{ width: '80%' }}></div>
+            <div className="skeleton-text" style={{ width: '90%' }}></div>
+            <div className="skeleton-text" style={{ width: '70%' }}></div>
+          </div>
         ) : (
           <ul className="category-list">
             <li>

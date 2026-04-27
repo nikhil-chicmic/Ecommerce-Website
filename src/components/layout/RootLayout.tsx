@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { LogOut, ShoppingCart, User as UserIcon, BrainCircuit } from 'lucide-react';
 import type { RootState } from '../../store';
@@ -18,6 +18,13 @@ export const RootLayout: React.FC = () => {
   const [theme, setTheme] = React.useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('app_theme') as 'light' | 'dark') || 'dark';
   });
+
+  const { pathname } = useLocation();
+
+  // Global scroll reset on route change
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   // AI-Native Behavioral Tracking
   React.useEffect(() => {
@@ -128,7 +135,7 @@ export const RootLayout: React.FC = () => {
                 <span style={{ fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.04em', color: 'var(--text-primary)' }}>AIStore</span>
               </Link>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: '1.6', maxWidth: '300px' }}>
-                Engineering the next generation of commerce. Powered by state-of-the-art neural architectures.
+                Engineering the next generation of commerce. Powered by state-of-the-art secure logistics.
               </p>
             </div>
             
@@ -136,7 +143,7 @@ export const RootLayout: React.FC = () => {
               <h4 style={{ color: 'var(--text-primary)', fontWeight: 800, marginBottom: '24px', fontSize: '0.95rem', letterSpacing: '0.02em' }}>SYSTEM</h4>
               <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <li><Link to="/" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500, transition: 'color 0.2s' }}>Discovery Layer</Link></li>
-                <li><Link to="/" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Neural Collections</Link></li>
+                <li><Link to="/" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Curated Collections</Link></li>
                 <li><Link to="/" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Global Index</Link></li>
               </ul>
             </div>
@@ -145,7 +152,7 @@ export const RootLayout: React.FC = () => {
               <h4 style={{ color: 'var(--text-primary)', fontWeight: 800, marginBottom: '24px', fontSize: '0.95rem', letterSpacing: '0.02em' }}>SUPPORT</h4>
               <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Concierge</a></li>
-                <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Neural Returns</a></li>
+                <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Easy Returns</a></li>
                 <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>API Documentation</a></li>
               </ul>
             </div>
@@ -154,14 +161,14 @@ export const RootLayout: React.FC = () => {
               <h4 style={{ color: 'var(--text-primary)', fontWeight: 800, marginBottom: '24px', fontSize: '0.95rem', letterSpacing: '0.02em' }}>CONNECT</h4>
               <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Our Vision</a></li>
-                <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Neural Careers</a></li>
+                <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Careers</a></li>
                 <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Privacy Core</a></li>
               </ul>
             </div>
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '32px', borderTop: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.8125rem', fontWeight: 600 }}>
-            <p>&copy; {new Date().getFullYear()} AIStore Inc. Neural fulfillment network operational.</p>
+            <p>&copy; {new Date().getFullYear()} AIStore Inc. Global fulfillment network operational.</p>
           </div>
         </div>
       </footer>

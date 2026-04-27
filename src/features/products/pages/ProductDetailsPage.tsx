@@ -132,7 +132,7 @@ export const ProductDetailsPage: React.FC = () => {
           <div className="ai-glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-xl)', borderLeft: '4px solid var(--brand-secondary)', background: 'rgba(139, 92, 246, 0.03)', minHeight: '340px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
               <Sparkles size={18} color="var(--brand-secondary)" />
-              <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Neural Insights</h3>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>AI Insights</h3>
             </div>
             
             {!aiInsights ? (
@@ -171,13 +171,13 @@ export const ProductDetailsPage: React.FC = () => {
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div>
-                    <h4 style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--status-success)', marginBottom: '8px', letterSpacing: '0.05em' }}>Neural Pros</h4>
+                    <h4 style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--status-success)', marginBottom: '8px', letterSpacing: '0.05em' }}>Key Advantages</h4>
                     <ul style={{ padding: 0, margin: 0, listStyle: 'none', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '4px', color: 'var(--text-secondary)' }}>
                       {aiInsights.pros.map((p: string, i: number) => <li key={i}>• {p}</li>)}
                     </ul>
                   </div>
                   <div>
-                    <h4 style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--status-error)', marginBottom: '8px', letterSpacing: '0.05em' }}>Neural Cons</h4>
+                    <h4 style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--status-error)', marginBottom: '8px', letterSpacing: '0.05em' }}>Considerations</h4>
                     <ul style={{ padding: 0, margin: 0, listStyle: 'none', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '4px', color: 'var(--text-secondary)' }}>
                       {aiInsights.cons.map((p: string, i: number) => <li key={i}>• {p}</li>)}
                     </ul>

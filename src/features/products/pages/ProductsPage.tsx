@@ -11,32 +11,91 @@ import { Sparkles, BrainCircuit } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { trackSearch } from '../../ai/store/aiSlice';
 
+import { useSearchParams } from 'react-router-dom';
+
 export const ProductsPage: React.FC = () => {
   const dispatch = useDispatch();
-  const [filters, setFilters] = useState<ProductFilters>({
-    search: '',
-    category: 'all',
-    sortBy: undefined,
-  });
+  const [searchParams, setSearchParams] = useSearchParams();
   
-  // Debounce the search input to avoid spamming the API
-  const debouncedSearch = useDebounce(filters.search, 500);
+  // 1. Derive active filters directly from URL
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
+  const currentCategory = searchParams.get('category') || 'all';
+  const currentSortBy = (searchParams.get('sortBy') as ProductFilters['sortBy']) || undefined;
+  const currentSearch = searchParams.get('search') || '';
+  
+  const itemsPerPage = 10;
+  
+  // 2. Local state only for the search input (to keep it snappy)
+  const [searchInput, setSearchInput] = useState(currentSearch);
+  
+  // Update local input if URL changes (e.g. back navigation)
+  React.useEffect(() => {
+    setSearchInput(currentSearch);
+    window.scrollTo(0, 0);
+  }, [currentSearch, currentCategory, currentSortBy, currentPage]);
+
+  // 3. Debounce the search input for URL synchronization
+  const debouncedSearch = useDebounce(searchInput, 500);
 
   React.useEffect(() => {
     if (debouncedSearch) dispatch(trackSearch(debouncedSearch));
+    
+    const newParams = new URLSearchParams(searchParams);
+    if (debouncedSearch) {
+      newParams.set('search', debouncedSearch);
+      if (debouncedSearch !== currentSearch) newParams.set('page', '1');
+    } else {
+      newParams.delete('search');
+    }
+    
+    if (newParams.toString() !== searchParams.toString()) {
+      setSearchParams(newParams, { replace: true });
+    }
   }, [debouncedSearch]);
 
-  // We memoize the applied filters so React Query can cache appropriately
+  // 4. Memoized filters for the API hook
   const appliedFilters = React.useMemo(() => ({
-    ...filters,
-    search: debouncedSearch,
-  }), [filters.category, filters.sortBy, debouncedSearch]);
+    search: currentSearch,
+    category: currentCategory,
+    sortBy: currentSortBy,
+  }), [currentSearch, currentCategory, currentSortBy]);
 
-  const { data, isLoading, isError, error } = useProducts(0, 20, appliedFilters);
+  const { data, isLoading, isError, error } = useProducts(
+    (currentPage - 1) * itemsPerPage, 
+    itemsPerPage, 
+    appliedFilters
+  );
 
   const handleFilterChange = (newFilters: ProductFilters) => {
-    setFilters(newFilters);
+    const newParams = new URLSearchParams(searchParams);
+    
+    if (newFilters.category && newFilters.category !== 'all') {
+      newParams.set('category', newFilters.category);
+    } else {
+      newParams.delete('category');
+    }
+    
+    if (newFilters.sortBy) {
+      newParams.set('sortBy', newFilters.sortBy);
+    } else {
+      newParams.delete('sortBy');
+    }
+    
+    newParams.set('page', '1'); 
+    setSearchParams(newParams);
   };
+
+  const handlePageChange = (newPage: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('page', newPage.toString());
+    setSearchParams(newParams);
+  };
+
+  const totalPages = data ? Math.ceil(data.total / itemsPerPage) : 0;
+  
+  // Reconstruct filters object for components expecting it
+  const filters = { search: searchInput, category: currentCategory, sortBy: currentSortBy };
+
 
   return (
     <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 40px' }}>
@@ -63,13 +122,10 @@ export const ProductsPage: React.FC = () => {
               <input 
                 type="text" 
                 placeholder="Describe your ideal product..." 
-                value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 style={{ flex: 1, background: 'transparent', border: 'none', fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', outline: 'none' }}
               />
-              <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--brand-primary)', background: 'rgba(99, 102, 241, 0.1)', padding: '6px 12px', borderRadius: '10px', letterSpacing: '0.1em' }}>
-                 NEURAL ENGINE
-              </div>
             </div>
 
             <div>
@@ -91,7 +147,7 @@ export const ProductsPage: React.FC = () => {
 
           <div className="products-grid">
             {isLoading ? (
-              Array.from({ length: 12 }).map((_, i) => <ProductSkeleton key={i} />)
+              Array.from({ length: 10 }).map((_, i) => <ProductSkeleton key={i} />)
             ) : data?.products.length === 0 ? (
               <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 'var(--spacing-12)', color: 'var(--text-muted)' }}>
                 <h3>No products found</h3>
@@ -103,6 +159,49 @@ export const ProductsPage: React.FC = () => {
               ))
             )}
           </div>
+
+          {/* Pagination System */}
+          {totalPages > 1 && (
+            <div className="pagination-container">
+              <button 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="pagination-btn"
+              >
+                Previous
+              </button>
+              
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const pageNum = i + 1;
+                  // Show only first, last, and pages around current
+                  if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)) {
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`pagination-number ${currentPage === pageNum ? 'active' : ''}`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  }
+                  if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                    return <span key={pageNum} style={{ color: 'var(--text-muted)' }}>...</span>;
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button 
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="pagination-btn"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

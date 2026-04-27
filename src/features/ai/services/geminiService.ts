@@ -35,61 +35,86 @@ RULES:
 
 export const geminiService = {
   /**
-   * Primary interface for the Persistent Copilot
+   * Primary interface for the Persistent Assistant
    */
   async processCoPilotQuery(
     query: string, 
     context: UserContext, 
     history: any[]
   ): Promise<AISystemResponse> {
-    // Simulate Gemini 2.5 Flash Lite Fast Response
-    await new Promise(r => setTimeout(r, 800)); 
+    // Artificial latency for premium "thinking" feel
+    await new Promise(r => setTimeout(r, 1200)); 
 
     const lowerQuery = query.toLowerCase();
     
-    // Reasoning Step: Determine Intent
-    let intent: AISystemResponse['intent'] = 'discovery';
-    if (lowerQuery.includes('compare') || lowerQuery.includes('better than')) intent = 'comparison';
-    if (lowerQuery.includes('why should i') || lowerQuery.includes('is it worth')) intent = 'decision_support';
-    if (lowerQuery.includes('buy') || lowerQuery.includes('checkout')) intent = 'checkout_help';
+    // 1. Strict Domain Enforcement
+    const commerceKeywords = ['product', 'price', 'buy', 'shoe', 'tech', 'glass', 'watch', 'find', 'search', 'cost', 'deal', 'quality', 'style', 'collection', 'gym', 'sport', 'fashion'];
+    const isCommerceRelated = commerceKeywords.some(keyword => lowerQuery.includes(keyword)) || 
+                             lowerQuery.split(' ').length < 3; // Allow short greetings
 
-    // Logic: Intelligent Product Discovery
-    if (intent === 'discovery') {
-      const { products } = await productApi.getProducts(0, 100, {});
-      
-      // AI-Native Filtering (Simulating NL Understanding)
-      let filtered = products;
-      if (lowerQuery.includes('gym') || lowerQuery.includes('sport')) {
-        filtered = products.filter(p => p.category === 'mens-shoes' || p.category === 'mens-watches');
-      }
-      
-      if (lowerQuery.includes('premium')) {
-        filtered = [...filtered].sort((a, b) => b.price - a.price);
-      }
-
-      const results = filtered.slice(0, 3);
-
+    if (!isCommerceRelated) {
       return {
-        intent,
-        text: results.length > 0 
-          ? `I've curated a selection of premium equipment optimized for high-performance ${lowerQuery.includes('gym') ? 'training' : 'environments'}. These pieces are selected for their durability and technological edge.`
-          : "I understand you're looking for something specialized. Could you tell me more about your specific style preferences or performance requirements?",
-        suggestedProducts: results,
-        reasoning: "Selected based on high user ratings in performance categories and current session context.",
-        actionItems: results.length > 0 ? ["View Comparison", "Ask about materials"] : ["See all categories"]
+        intent: 'greeting',
+        text: "I specialize in helping you navigate our high-end collections. Could we focus on finding the perfect product for your current needs?",
+        reasoning: "Query flagged as out-of-domain. Re-centering on commerce value proposition."
       };
     }
 
-    // Default Support logic
+    // 2. Intelligent Intent Detection
+    let intent: AISystemResponse['intent'] = 'discovery';
+    if (lowerQuery.includes('compare') || lowerQuery.includes('better than') || lowerQuery.includes('vs')) intent = 'comparison';
+    if (lowerQuery.includes('why') || lowerQuery.includes('worth') || lowerQuery.includes('quality')) intent = 'decision_support';
+    if (lowerQuery.includes('checkout') || lowerQuery.includes('pay') || lowerQuery.includes('order')) intent = 'checkout_help';
+
+    // 3. Dynamic Product Fetching with Mid-Range Logic
+    const { products } = await productApi.getProducts(0, 100, {});
+    
+    // Mid-range filter: Items between $20 and $500 (premium but accessible)
+    const midRangeProducts = products.filter(p => p.price >= 20 && p.price <= 500);
+    
+    // Contextual matching
+    let matched = midRangeProducts;
+    if (lowerQuery.includes('gym') || lowerQuery.includes('sport')) {
+      matched = midRangeProducts.filter(p => p.category.includes('men') || p.category.includes('sport') || p.category.includes('watch'));
+    } else if (lowerQuery.includes('tech') || lowerQuery.includes('gadget')) {
+      matched = midRangeProducts.filter(p => p.category.includes('laptop') || p.category.includes('phone') || p.category.includes('watch'));
+    } else if (lowerQuery.includes('style') || lowerQuery.includes('look')) {
+      matched = midRangeProducts.filter(p => p.category.includes('glass') || p.category.includes('jewel') || p.category.includes('dress'));
+    }
+
+    // Fallback to general mid-range if no specific match
+    const results = matched.length >= 2 ? matched.slice(0, 2) : midRangeProducts.slice(0, 2);
+
+    // 4. Dynamic Response Composition
+    const templates = {
+      discovery: [
+        `I've identified these mid-range selections that balance exceptional craftsmanship with accessibility. They align perfectly with your interest in ${lowerQuery.includes('gym') ? 'performance gear' : 'quality essentials'}.`,
+        `Based on our current catalog, these two pieces represent the "sweet spot" of our collection—offering pro-level specs at a refined price point.`,
+        `Analyzing our inventory for ${lowerQuery}... I recommend these balanced options that maintain our high standard of engineering.`
+      ],
+      decision_support: [
+        `Quality is our primary directive. These items are selected because they maintain high durability ratings while staying within a versatile mid-range budget.`,
+        `When evaluating value, I focus on long-term utility. These suggestions are frequently cited for exceeding user expectations in daily use.`
+      ],
+      comparison: [
+        `Comparing options for you. While we have entry-level and ultra-premium tiers, these mid-range selections offer the most comprehensive feature sets for the investment.`
+      ]
+    };
+
+    const pool = templates[intent as keyof typeof templates] || templates.discovery;
+    const responseText = pool[Math.floor(Math.random() * pool.length)];
+
     return {
-      intent: 'greeting',
-      text: "I'm monitoring your session and I'm ready to assist with any technical specs or comparison needs. What's on your mind?",
-      reasoning: "General greeting based on session initiation."
+      intent,
+      text: responseText,
+      suggestedProducts: results,
+      reasoning: `Synthesized from ${products.length} catalog items. Applied mid-range pricing filter ($20-$500) to ensure accessibility without compromising brand prestige.`,
+      actionItems: ["View Specifications", "Compare Features"]
     };
   },
 
   /**
-   * PDP Decision Support (Why this product fits you)
+   * PDP Decision Support
    */
   async getProductInsights(product: Product, context: UserContext): Promise<{
     summary: string;
@@ -97,16 +122,13 @@ export const geminiService = {
     cons: string[];
     fitReason: string;
   }> {
-    // Simulate Gemini Reasoning
     await new Promise(r => setTimeout(r, 600));
 
     return {
-      summary: `${product.title} is a ${product.category} powerhouse designed for users who prioritize ${product.rating > 4.5 ? 'quality and long-term value' : 'functional efficiency'}.`,
-      pros: ["Exceptional build quality", "Top-tier community rating", "Competitive price-to-performance ratio"],
-      cons: ["High demand may affect shipping", "Limited color variants"],
-      fitReason: context.viewedProductIds.length > 2 
-        ? `Since you've been exploring ${product.category}, this is the most balanced option in our catalog for your patterns.`
-        : "This aligns with trending premium selections in your current search region."
+      summary: `${product.title} represents a pinnacle of ${product.category} engineering. It's specifically tailored for users who demand professional results.`,
+      pros: ["Precision manufacturing", "High-efficiency materials", "Optimized user ergonomics"],
+      cons: ["Professional-grade learning curve", "High demand availability"],
+      fitReason: `This selection matches your preference for ${product.category}. It's currently one of the most reliable choices in the mid-to-high performance tier.`
     };
   }
 };

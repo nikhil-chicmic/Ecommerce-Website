@@ -106,8 +106,8 @@ export const CopilotSidebar: React.FC = () => {
           <div className="copilot-brand">
             <BrainCircuit className="brand-icon" />
             <div>
-              <h3>Neural Co-pilot</h3>
-              <span className="status">Active Intelligence Loop</span>
+              <h3>AI Assistant</h3>
+              <span className="status">Personal Shopper Online</span>
             </div>
           </div>
           <button className="close-btn" onClick={() => dispatch(toggleCopilot())}>
@@ -118,7 +118,7 @@ export const CopilotSidebar: React.FC = () => {
       <div className="copilot-chat-area">
         {chatHistory.length === 0 && (
           <div className="welcome-area">
-            <h2>Experience Intelligence</h2>
+            <h2>Your Assistant</h2>
             <p>I'm your persistent commerce layer. I remember your journey and simplify your decisions.</p>
             <div className="quick-suggestions">
               <button onClick={() => setInput('Find premium gym gear under 5k')}>
@@ -146,7 +146,7 @@ export const CopilotSidebar: React.FC = () => {
                         <button className="btn-mini-action" onClick={() => {
   navigate(`/product/${product.id}`);
   dispatch(toggleCopilot());
-}}>View Intelligence</button>
+}}>View Details</button>
                       </div>
                     </div>
                   ))}
