@@ -2,93 +2,91 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ENV } from '../../../config/env';
 
 const genAI = new GoogleGenerativeAI(ENV.GEMINI_API_KEY);
-const MODEL_NAME = "gemini-2.0-flash-lite";
-
-const SYSTEM_PROMPT = `
-You are the Lumina Concierge, an elite personal shopping strategist. 
-Your goal is to understand exactly what the user wants and return a structured JSON response.
-
-DIRECTIONS:
-1. Always respond in valid JSON format.
-2. Detect the user's intent:
-   - "search": User is looking for products.
-   - "order": User is asking about their order history.
-   - "chat": General conversation.
-
-JSON STRUCTURE:
-{
-  "intent": "search" | "order" | "chat",
-  "query": "search term if searching",
-  "reasoning": "1-sentence internal logic why you gave this answer",
-  "response": "A professional, helpful message",
-  "suggestedProducts": [] 
-}
-`;
+const MODEL_NAME = "gemini-1.5-flash";
 
 export const geminiService = {
-  async processMessage(userMessage: string) {
+  async processCoPilotQuery(message: string, context?: any, history?: any) {
+    const rawQuery = message.toLowerCase().trim();
+    
     try {
-      const model = genAI.getGenerativeModel({ model: MODEL_NAME });
-      const result = await model.generateContent([SYSTEM_PROMPT, userMessage]);
-      const text = result.response.text();
-      
-      const startIdx = text.indexOf('{');
-      const endIdx = text.lastIndexOf('}');
-      if (startIdx === -1 || endIdx === -1) throw new Error('Invalid AI response');
-      
-      return JSON.parse(text.substring(startIdx, endIdx + 1));
+        // 1. DYNAMIC CATEGORY VERIFICATION
+        // We fetch the live categories from the store to see what we actually sell
+        const catRes = await fetch('https://dummyjson.com/products/categories');
+        const categories = await catRes.json(); // Array of { slug, name, url }
+        const categoryNames = categories.map((c: any) => c.slug.toLowerCase());
+
+        // 2. DETECT SHOPPING INTENT (Dynamic)
+        // Check if the message contains any of our live categories or shopping verbs
+        const shoppingVerbs = ['buy', 'search', 'find', 'show', 'need', 'want', 'get', 'price', 'check', 'available'];
+        const isShoppingVerb = shoppingVerbs.some(verb => rawQuery.includes(verb));
+        const isCategoryMatch = categoryNames.some(cat => rawQuery.includes(cat) || rawQuery.includes(cat.slice(0, -1))); // handle basic plurals
+
+        if (!isShoppingVerb && !isCategoryMatch && rawQuery.length > 5) {
+            return {
+                text: "I am your Lumina Concierge, specialized exclusively in our premium collection. I can help you find products, check availability, or explore our latest arrivals. What can I help you find today?",
+                intent: 'reject',
+                reasoning: "Domain lock: Non-ecommerce query.",
+                suggestedProducts: []
+            };
+        }
+
+        // 3. INTELLIGENT QUERY CLEANING
+        // Strip out the "noise" to find the real product name
+        let cleanQuery = rawQuery
+            .replace(/show me|i want to buy|i need|find|search for|do you have|any|available|can i get|where is|the|a |an /g, '')
+            .trim();
+
+        // Automatic plural correction (strip 's' if query doesn't match and ends in 's')
+        if (cleanQuery.endsWith('s') && cleanQuery.length > 3) {
+            const singularTry = cleanQuery.slice(0, -1);
+            // Quick check if the singular version exists in categories
+            if (categoryNames.includes(singularTry)) {
+                cleanQuery = singularTry;
+            }
+        }
+
+        // 4. LIVE INVENTORY FULFILLMENT
+        const response = await fetch(`https://dummyjson.com/products/search?q=${encodeURIComponent(cleanQuery)}&limit=4`);
+        const data = await response.json();
+        const products = data.products || [];
+
+        if (products.length > 0) {
+            return {
+                text: `I've explored our premium collection and found these items matching your interest in "${cleanQuery}":`,
+                intent: 'search',
+                reasoning: "Dynamic inventory match found.",
+                suggestedProducts: products
+            };
+        } else {
+            return {
+                text: `I've checked our current inventory, but we don't have any items matching "${cleanQuery}" at the moment. Would you like to explore our other premium categories?`,
+                intent: 'search',
+                reasoning: "No dynamic match found.",
+                suggestedProducts: []
+            };
+        }
     } catch (error) {
-      console.error('Lumina Concierge Sync Error:', error);
-      // Fallback for 404 or Quota issues
-      return { 
-        intent: 'chat', 
-        query: '', 
-        reasoning: 'System fallback due to connectivity issues.',
-        response: "I'm having a brief synchronization moment. Please try again!" 
-      };
+        return {
+            text: "I'm having a brief synchronization moment with our inventory system. Please try your search again.",
+            intent: 'chat',
+            reasoning: "API Sync Failure.",
+            suggestedProducts: []
+        };
     }
   },
 
-  async getProductInsights(product: any) {
+  // Still used for PDP insights
+  async getProductInsights(product: any, context?: any) {
     try {
       const model = genAI.getGenerativeModel({ model: MODEL_NAME });
-      const prompt = `
-        You are a luxury shopping consultant. Analyze this product and return a JSON object:
-        Product: ${product.title}
-        Description: ${product.description}
-
-        JSON Structure:
-        {
-          "summary": "2-sentence high-end summary",
-          "pros": ["advantage 1", "advantage 2", "advantage 3"],
-          "cons": ["consideration 1", "consideration 2"],
-          "fitReason": "Why this fits a premium lifestyle"
-        }
-      `;
-      
+      const prompt = `2-sentence luxury marketing for: ${product.title}. Description: ${product.description}. JSON: {summary, pros:[], cons:[], fitReason}`;
       const result = await model.generateContent(prompt);
       const text = result.response.text();
       const startIdx = text.indexOf('{');
       const endIdx = text.lastIndexOf('}');
       return JSON.parse(text.substring(startIdx, endIdx + 1));
     } catch (error) {
-      return {
-        summary: "An elite choice for the discerning collector. Part of our exclusive Lumina selection.",
-        pros: ["Premium Craftsmanship", "Limited Availability", "Timeless Design"],
-        cons: ["High Demand", "Selective Stock"],
-        fitReason: "Matches your preference for high-quality, verified products."
-      };
+      return { summary: "An elite choice.", pros: ["Premium"], cons: [], fitReason: "Lumina quality." };
     }
-  },
-
-  // Alias for Sidebar with full object support
-  async processCoPilotQuery(message: string, context?: any, history?: any) {
-    const result = await this.processMessage(message);
-    return {
-      text: result.response,
-      intent: result.intent,
-      reasoning: result.reasoning || "Optimizing your shopping journey.",
-      suggestedProducts: [] // This will be hydrated by the pipeline if intent is 'search'
-    };
   }
 };

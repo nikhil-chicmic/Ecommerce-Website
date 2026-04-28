@@ -61,31 +61,20 @@ export const ProductCard: React.FC<Props> = ({ product }) => {
           <button className="btn-add-to-cart" onClick={handleAddToCart}>
             <ShoppingCart size={18} /> Add to Cart
           </button>
-        ) : (
-          <div className="ai-glass-panel" style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '12px', 
-            padding: '8px 12px', 
-            borderRadius: '12px',
-            width: '100%',
-            justifyContent: 'space-between',
-            background: 'var(--bg-elevated)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-            border: '1px solid var(--brand-primary)'
-          }}>
+         ) : (
+          <div className="product-quantity-selector">
             <button 
+              className="btn-qty-action"
               onClick={(e) => handleUpdateQuantity(e, cartItem.quantity - 1)}
-              style={{ background: 'var(--brand-primary)', border: 'none', color: 'white', width: '28px', height: '28px', borderRadius: '8px', cursor: 'pointer', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               -
             </button>
-            <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span className="qty-display">
               {cartItem.quantity} {cartItem.quantity === 1 ? 'ITEM' : 'ITEMS'}
             </span>
             <button 
+              className="btn-qty-action"
               onClick={(e) => handleUpdateQuantity(e, cartItem.quantity + 1)}
-              style={{ background: 'var(--brand-primary)', border: 'none', color: 'white', width: '28px', height: '28px', borderRadius: '8px', cursor: 'pointer', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               +
             </button>

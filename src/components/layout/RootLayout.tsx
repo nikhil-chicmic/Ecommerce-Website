@@ -1,13 +1,13 @@
+import { BrainCircuit, ShoppingCart } from 'lucide-react';
 import React from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { LogOut, ShoppingCart, User as UserIcon, BrainCircuit } from 'lucide-react';
-import type { RootState } from '../../store';
-import { logout } from '../../features/auth/store/authSlice';
-import { useCart } from '../../features/cart/hooks/useCart';
-import { CartDrawer } from '../../features/cart/components/CartDrawer';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { CopilotSidebar } from '../../features/ai/components/CopilotSidebar';
-import { trackProductView, trackSearch } from '../../features/ai/store/aiSlice';
+import { trackSearch } from '../../features/ai/store/aiSlice';
+import { logout } from '../../features/auth/store/authSlice';
+import { CartDrawer } from '../../features/cart/components/CartDrawer';
+import { useCart } from '../../features/cart/hooks/useCart';
+import type { RootState } from '../../store';
 
 export const RootLayout: React.FC = () => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
@@ -140,35 +140,37 @@ export const RootLayout: React.FC = () => {
             </div>
             
             <div>
-              <h4 style={{ color: 'var(--text-primary)', fontWeight: 800, marginBottom: '24px', fontSize: '0.95rem', letterSpacing: '0.02em' }}>SYSTEM</h4>
+              <h4 style={{ color: 'var(--text-primary)', fontWeight: 800, marginBottom: '24px', fontSize: '0.95rem', letterSpacing: '0.02em' }}>PLATFORM</h4>
               <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li><Link to="/" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500, transition: 'color 0.2s' }}>Discovery Layer</Link></li>
-                <li><Link to="/" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Curated Collections</Link></li>
-                <li><Link to="/" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Global Index</Link></li>
+                <li><Link to="/" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500, transition: 'color 0.2s' }}>Discovery</Link></li>
+                <li><Link to="/profile" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>My Account</Link></li>
+                <li><Link to="/checkout" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Checkout</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 style={{ color: 'var(--text-primary)', fontWeight: 800, marginBottom: '24px', fontSize: '0.95rem', letterSpacing: '0.02em' }}>SUPPORT</h4>
+              <h4 style={{ color: 'var(--text-primary)', fontWeight: 800, marginBottom: '24px', fontSize: '0.95rem', letterSpacing: '0.02em' }}>GOVERNANCE</h4>
               <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Concierge</a></li>
-                <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Easy Returns</a></li>
-                <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>API Documentation</a></li>
+                <li><Link to="/admin" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Control Panel</Link></li>
+                {!isAuthenticated && (
+                  <li><Link to="/login" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Access Portal</Link></li>
+                )}
               </ul>
             </div>
 
-            <div>
-              <h4 style={{ color: 'var(--text-primary)', fontWeight: 800, marginBottom: '24px', fontSize: '0.95rem', letterSpacing: '0.02em' }}>CONNECT</h4>
-              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Our Vision</a></li>
-                <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Careers</a></li>
-                <li><a href="#" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>Privacy Core</a></li>
-              </ul>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div>
+                <h4 style={{ color: 'var(--text-primary)', fontWeight: 800, marginBottom: '16px', fontSize: '0.95rem', letterSpacing: '0.02em' }}>STATUS</h4>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--status-success)', fontSize: '0.75rem', fontWeight: 700 }}>
+                  <div style={{ width: '8px', height: '8px', background: 'var(--status-success)', borderRadius: '50%', boxShadow: '0 0 8px var(--status-success)' }}></div>
+                  SYSTEMS OPERATIONAL
+                </div>
+              </div>
             </div>
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '32px', borderTop: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.8125rem', fontWeight: 600 }}>
-            <p>&copy; {new Date().getFullYear()} Lumina Inc. Global fulfillment network operational.</p>
+            <p>&copy; {new Date().getFullYear()} Lumina build by Nikhil</p>
           </div>
         </div>
       </footer>

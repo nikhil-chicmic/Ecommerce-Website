@@ -217,6 +217,68 @@
   cursor: not-allowed;
 }
 
+.pdp-action-item {
+  flex: 1;
+  height: 64px; /* Fixed height to prevent any shifting */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-4);
+  border-radius: var(--radius-xl);
+  font-size: 1.125rem;
+  font-weight: 700;
+  transition: all var(--transition-fast);
+}
+
+.pdp-qty-selector {
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--brand-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.pdp-qty-btn {
+  background: var(--brand-primary);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.pdp-qty-btn:hover {
+  background: var(--brand-primary-hover);
+  transform: scale(1.05);
+}
+
+.pdp-qty-info {
+  text-align: center;
+}
+
+.pdp-qty-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--brand-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.pdp-qty-value {
+  font-weight: 800;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
 .pdp-trust-badges {
   display: flex;
   flex-direction: column;
@@ -371,6 +433,7 @@
   gap: 8px;
   cursor: pointer;
   transition: all var(--transition-fast);
+  height: 48px;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
 }
 
@@ -378,6 +441,48 @@
   background: var(--brand-primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(99, 102, 241, 0.25);
+}
+
+.product-quantity-selector {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px; /* Matched to btn-add-to-cart */
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--brand-primary);
+  height: 48px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.btn-qty-action {
+  background: var(--brand-primary);
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.btn-qty-action:hover {
+  background: var(--brand-primary-hover);
+  transform: scale(1.1);
+}
+
+.qty-display {
+  font-weight: 800;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .product-info {

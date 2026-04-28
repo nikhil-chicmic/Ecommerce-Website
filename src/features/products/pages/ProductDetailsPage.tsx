@@ -196,38 +196,27 @@ export const ProductDetailsPage: React.FC = () => {
           <div style={{ display: 'flex', gap: '16px' }}>
             {!cartItem ? (
               <button 
-                className="btn-primary" 
+                className="btn-pdp-buy pdp-action-item" 
                 onClick={handleAddToCart}
-                style={{ flex: 1, padding: '20px', fontSize: '1.125rem', borderRadius: 'var(--radius-xl)' }}
                 disabled={product.stock <= 0}
               >
                 <ShoppingCart size={22} /> {product.stock > 0 ? 'Add to Collection' : 'Out of Stock'}
               </button>
             ) : (
-              <div className="ai-glass-panel" style={{ 
-                flex: 1,
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                padding: '12px 24px', 
-                borderRadius: 'var(--radius-xl)',
-                background: 'var(--bg-elevated)',
-                boxShadow: 'var(--shadow-md)',
-                border: '1px solid var(--brand-primary)'
-              }}>
+              <div className="pdp-action-item pdp-qty-selector">
                 <button 
+                  className="pdp-qty-btn"
                   onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
-                  style={{ background: 'var(--brand-primary)', border: 'none', color: 'white', width: '40px', height: '40px', borderRadius: '12px', cursor: 'pointer', fontWeight: 800, fontSize: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                   -
                 </button>
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ display: 'block', fontSize: '0.65rem', fontWeight: 800, color: 'var(--brand-primary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Item Count</span>
-                  <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.5rem' }}>{cartItem.quantity}</span>
+                <div className="pdp-qty-info">
+                  <span className="pdp-qty-label">Item Count</span>
+                  <span className="pdp-qty-value">{cartItem.quantity}</span>
                 </div>
                 <button 
+                  className="pdp-qty-btn"
                   onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
-                  style={{ background: 'var(--brand-primary)', border: 'none', color: 'white', width: '40px', height: '40px', borderRadius: '12px', cursor: 'pointer', fontWeight: 800, fontSize: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                   +
                 </button>

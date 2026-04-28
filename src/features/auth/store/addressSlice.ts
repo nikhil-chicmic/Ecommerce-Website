@@ -55,12 +55,21 @@ export const saveAddress = createAsyncThunk(
         city: address.city,
         state: address.state,
         postal_code: address.postal_code,
-        country: address.country
+        country: address.country,
+        is_default: false
       })
       .select()
-      .single();
+      .maybeSingle();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase Address Save Error:', error);
+      throw error;
+    }
+    
+    if (!data) {
+      throw new Error('Address saved but not returned by database. Please refresh.');
+    }
+    
     return data as Address;
   }
 );

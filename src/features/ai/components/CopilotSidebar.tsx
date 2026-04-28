@@ -120,58 +120,61 @@ export const CopilotSidebar: React.FC = () => {
         </div>
 
       <div className="copilot-chat-area">
-        {chatHistory.length === 0 && (
-          <div className="welcome-area">
-            <h2>Lumina Concierge</h2>
-            <p>I'm your persistent commerce strategist. I remember your journey through Lumina and simplify every decision.</p>
-            <div className="quick-suggestions">
-              <button onClick={() => setInput('Find premium gym gear under 5k')}>
-                "Premium gym gear under 5k" <ChevronRight size={14} />
-              </button>
-              <button onClick={() => setInput('What fits my style based on views?')}>
-                "What fits my style based on views?" <ChevronRight size={14} />
-              </button>
+        <div className="chat-messages-container">
+          <div ref={chatEndRef} />
+          
+          {isTyping && (
+            <div className="typing-indicator">
+              <span></span><span></span><span></span>
             </div>
-          </div>
-        )}
+          )}
 
-        {chatHistory.map((msg, i) => (
-            <div key={i} className={`chat-message ${msg.role}`}>
-              <div className="message-bubble">{msg.content}</div>
-              
-              {msg.suggestedProducts && msg.suggestedProducts.length > 0 && (
-                <div className="chat-suggestions-grid">
-                  {msg.suggestedProducts.map((product: any) => (
-                    <div key={product.id} className="mini-product-card ai-glass-panel">
-                      <img src={product.thumbnail} alt={product.title} />
-                      <div className="mini-info">
-                        <div className="mini-title">{product.title}</div>
-                        <div className="mini-price">${product.price}</div>
-                        <button className="btn-mini-action" onClick={() => {
-  navigate(`/product/${product.id}`);
-  dispatch(toggleCopilot());
-}}>View Details</button>
+          {activeReasoning && (
+            <div className="reasoning-indicator">
+              <Zap size={14} className="pulse" />
+              <span>{activeReasoning}</span>
+            </div>
+          )}
+
+          {[...chatHistory].reverse().map((msg, i) => (
+              <div key={i} className={`chat-message ${msg.role}`}>
+                <div className="message-bubble">{msg.content}</div>
+                
+                {msg.suggestedProducts && msg.suggestedProducts.length > 0 && (
+                  <div className="chat-suggestions-grid">
+                    {msg.suggestedProducts.map((product: any) => (
+                      <div key={product.id} className="mini-product-card ai-glass-panel">
+                        <img src={product.thumbnail} alt={product.title} />
+                        <div className="mini-info">
+                          <div className="mini-title">{product.title}</div>
+                          <div className="mini-price">${product.price}</div>
+                          <button className="btn-mini-action" onClick={() => {
+    navigate(`/product/${product.id}`);
+    dispatch(toggleCopilot());
+  }}>View Details</button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
+          ))}
+
+          {chatHistory.length === 0 && (
+            <div className="welcome-area">
+              <h2>Lumina Concierge</h2>
+              <p>I'm your persistent commerce strategist. I remember your journey through Lumina and simplify every decision.</p>
+              <div className="quick-suggestions">
+                <button onClick={() => setInput('Find premium gym gear under 5k')}>
+                  "Premium gym gear under 5k" <ChevronRight size={14} />
+                </button>
+                <button onClick={() => setInput('What fits my style based on views?')}>
+                  "What fits my style based on views?" <ChevronRight size={14} />
+                </button>
+              </div>
             </div>
-        ))}
-
-        {activeReasoning && (
-          <div className="reasoning-indicator">
-            <Zap size={14} className="pulse" />
-            <span>{activeReasoning}</span>
-          </div>
-        )}
-
-        {isTyping && (
-          <div className="typing-indicator">
-            <span></span><span></span><span></span>
-          </div>
-        )}
-        <div ref={chatEndRef} />
+          )}
+        </div>
       </div>
 
       <div className="copilot-input-area">
