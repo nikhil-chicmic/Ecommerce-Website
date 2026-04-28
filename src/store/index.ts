@@ -14,11 +14,14 @@ const persistConfig = {
   whitelist: ['cart', 'auth'], // Only persist cart and auth state
 };
 
+import { addressReducer } from '../features/auth/store/addressSlice';
+
 const rootReducer = combineReducers({
   auth: authReducer,
   cart: cartReducer,
   order: orderReducer,
   ai: aiReducer,
+  address: addressReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { ShoppingCart, X, Minus, Plus, ShoppingBag } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../../auth/hooks/useAuth';
 import '../styles/cart.css';
 
 export const CartDrawer: React.FC = () => {
-  const { items, totalAmount, isCartOpen, closeCart, updateQuantity, removeFromCart } = useCart();
+  const { items, totalAmount, isOpen, closeCart, updateQuantity, removeFromCart } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -21,7 +21,7 @@ export const CartDrawer: React.FC = () => {
 
   // Lock body scroll and prevent layout shift
   useEffect(() => {
-    if (isCartOpen) {
+    if (isOpen) {
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = `${scrollbarWidth}px`;
@@ -33,7 +33,7 @@ export const CartDrawer: React.FC = () => {
       document.body.style.overflow = 'unset';
       document.body.style.paddingRight = '0px';
     };
-  }, [isCartOpen]);
+  }, [isOpen]);
 
   const handleCheckout = () => {
     closeCart();
@@ -47,11 +47,11 @@ export const CartDrawer: React.FC = () => {
   return (
     <>
       <div 
-        className={`cart-overlay ${isCartOpen ? 'open' : ''}`} 
+        className={`cart-overlay ${isOpen ? 'open' : ''}`} 
         onClick={closeCart}
       />
       
-      <div className={`cart-drawer ${isCartOpen ? 'open' : ''}`} aria-hidden={!isCartOpen}>
+      <div className={`cart-drawer ${isOpen ? 'open' : ''}`} aria-hidden={!isOpen}>
         <div className="cart-header">
           <h2><ShoppingCart size={20} /> Your Cart</h2>
           <button className="btn-close" onClick={closeCart} aria-label="Close cart">
@@ -74,7 +74,13 @@ export const CartDrawer: React.FC = () => {
                 
               return (
                 <div key={item.id} className="cart-item">
-                  <img src={item.thumbnail} alt={item.title} className="cart-item-img" />
+                  {item.thumbnail ? (
+                    <img src={item.thumbnail} alt={item.title} className="cart-item-img" />
+                  ) : (
+                    <div className="cart-item-img placeholder" style={{ background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <ShoppingBag size={20} style={{ opacity: 0.3 }} />
+                    </div>
+                  )}
                   <div className="cart-item-details">
                     <h4 className="cart-item-title" title={item.title}>{item.title}</h4>
                     <span className="cart-item-price">${price.toFixed(2)}</span>

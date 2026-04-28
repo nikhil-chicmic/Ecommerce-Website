@@ -12,11 +12,15 @@ export const CopilotSidebar: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isCartOpen } = useCart();
+  const { isOpen: isCartOpen } = useCart();
   const { isCopilotVisible, chatHistory, activeReasoning, context } = useSelector((state: RootState) => state.ai);
   
-  // Logic to only show on home and product details, and NOT when cart is open
-  const shouldShow = (location.pathname === '/' || location.pathname.startsWith('/product/')) && !isCartOpen;
+  // Logic to only show on home, product details, and categories, and NOT when cart is open
+  const shouldShow = (
+    location.pathname === '/' || 
+    location.pathname.startsWith('/product/') || 
+    location.pathname.startsWith('/category/')
+  ) && !isCartOpen;
   
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -106,7 +110,7 @@ export const CopilotSidebar: React.FC = () => {
           <div className="copilot-brand">
             <BrainCircuit className="brand-icon" />
             <div>
-              <h3>AI Assistant</h3>
+              <h3>Lumina Concierge</h3>
               <span className="status">Personal Shopper Online</span>
             </div>
           </div>
@@ -118,8 +122,8 @@ export const CopilotSidebar: React.FC = () => {
       <div className="copilot-chat-area">
         {chatHistory.length === 0 && (
           <div className="welcome-area">
-            <h2>Your Assistant</h2>
-            <p>I'm your persistent commerce layer. I remember your journey and simplify your decisions.</p>
+            <h2>Lumina Concierge</h2>
+            <p>I'm your persistent commerce strategist. I remember your journey through Lumina and simplify every decision.</p>
             <div className="quick-suggestions">
               <button onClick={() => setInput('Find premium gym gear under 5k')}>
                 "Premium gym gear under 5k" <ChevronRight size={14} />

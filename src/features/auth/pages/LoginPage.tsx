@@ -69,7 +69,7 @@ export const LoginPage: React.FC = () => {
           </div>
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <div style={{ position: 'relative' }}>
+            <div className="password-input-wrapper">
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
@@ -79,14 +79,13 @@ export const LoginPage: React.FC = () => {
                 onBlur={validate}
                 placeholder="••••••••"
                 disabled={isLoading}
-                style={{ paddingRight: '40px', width: '100%' }}
               />
               <button 
                 type="button"
+                className="password-toggle-btn"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
               </button>
             </div>
             {validationErrors.password && <div className="validation-msg">{validationErrors.password}</div>}

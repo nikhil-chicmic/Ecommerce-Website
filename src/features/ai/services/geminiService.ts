@@ -1,134 +1,94 @@
-import { productApi } from '../../products/api/productApi';
-import type { Product } from '../../products/types';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ENV } from '../../../config/env';
 
-/**
- * AI CORE EXECUTION LAYER
- * Powering the AI-Native Commerce System
- */
-
-export interface AISystemResponse {
-  text: string;
-  intent: 'discovery' | 'comparison' | 'decision_support' | 'checkout_help' | 'greeting';
-  suggestedProducts?: Product[];
-  reasoning?: string; // AI's internal reasoning for the recommendation
-  actionItems?: string[]; // Dynamic CTAs for the user
-}
-
-export interface UserContext {
-  viewedProductIds: string[];
-  cartItems: string[];
-  lastSearch: string;
-}
+const genAI = new GoogleGenerativeAI(ENV.GEMINI_API_KEY);
+const MODEL_NAME = "gemini-2.0-flash-lite";
 
 const SYSTEM_PROMPT = `
-You are the AIStore Co-pilot, a high-end personal shopping strategist. 
-Your goal is to reduce user friction and provide elite decision support.
-You have access to the full product catalog and user behavior history.
+You are the Lumina Concierge, an elite personal shopping strategist. 
+Your goal is to understand exactly what the user wants and return a structured JSON response.
 
-RULES:
-1. Provide emotional + logical buying support.
-2. If the user is vague (e.g. "something premium"), ask clarifying questions about use-case or style.
-3. Always provide a "Why this fits you" reasoning for suggestions.
-4. Detect hesitation (e.g. comparing many items) and offer a comparison chart.
-5. Use a sophisticated, intelligent, but instant tone.
+DIRECTIONS:
+1. Always respond in valid JSON format.
+2. Detect the user's intent:
+   - "search": User is looking for products.
+   - "order": User is asking about their order history.
+   - "chat": General conversation.
+
+JSON STRUCTURE:
+{
+  "intent": "search" | "order" | "chat",
+  "query": "search term if searching",
+  "reasoning": "1-sentence internal logic why you gave this answer",
+  "response": "A professional, helpful message",
+  "suggestedProducts": [] 
+}
 `;
 
 export const geminiService = {
-  /**
-   * Primary interface for the Persistent Assistant
-   */
-  async processCoPilotQuery(
-    query: string, 
-    context: UserContext, 
-    history: any[]
-  ): Promise<AISystemResponse> {
-    // Artificial latency for premium "thinking" feel
-    await new Promise(r => setTimeout(r, 1200)); 
-
-    const lowerQuery = query.toLowerCase();
-    
-    // 1. Strict Domain Enforcement
-    const commerceKeywords = ['product', 'price', 'buy', 'shoe', 'tech', 'glass', 'watch', 'find', 'search', 'cost', 'deal', 'quality', 'style', 'collection', 'gym', 'sport', 'fashion'];
-    const isCommerceRelated = commerceKeywords.some(keyword => lowerQuery.includes(keyword)) || 
-                             lowerQuery.split(' ').length < 3; // Allow short greetings
-
-    if (!isCommerceRelated) {
-      return {
-        intent: 'greeting',
-        text: "I specialize in helping you navigate our high-end collections. Could we focus on finding the perfect product for your current needs?",
-        reasoning: "Query flagged as out-of-domain. Re-centering on commerce value proposition."
+  async processMessage(userMessage: string) {
+    try {
+      const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+      const result = await model.generateContent([SYSTEM_PROMPT, userMessage]);
+      const text = result.response.text();
+      
+      const startIdx = text.indexOf('{');
+      const endIdx = text.lastIndexOf('}');
+      if (startIdx === -1 || endIdx === -1) throw new Error('Invalid AI response');
+      
+      return JSON.parse(text.substring(startIdx, endIdx + 1));
+    } catch (error) {
+      console.error('Lumina Concierge Sync Error:', error);
+      // Fallback for 404 or Quota issues
+      return { 
+        intent: 'chat', 
+        query: '', 
+        reasoning: 'System fallback due to connectivity issues.',
+        response: "I'm having a brief synchronization moment. Please try again!" 
       };
     }
-
-    // 2. Intelligent Intent Detection
-    let intent: AISystemResponse['intent'] = 'discovery';
-    if (lowerQuery.includes('compare') || lowerQuery.includes('better than') || lowerQuery.includes('vs')) intent = 'comparison';
-    if (lowerQuery.includes('why') || lowerQuery.includes('worth') || lowerQuery.includes('quality')) intent = 'decision_support';
-    if (lowerQuery.includes('checkout') || lowerQuery.includes('pay') || lowerQuery.includes('order')) intent = 'checkout_help';
-
-    // 3. Dynamic Product Fetching with Mid-Range Logic
-    const { products } = await productApi.getProducts(0, 100, {});
-    
-    // Mid-range filter: Items between $20 and $500 (premium but accessible)
-    const midRangeProducts = products.filter(p => p.price >= 20 && p.price <= 500);
-    
-    // Contextual matching
-    let matched = midRangeProducts;
-    if (lowerQuery.includes('gym') || lowerQuery.includes('sport')) {
-      matched = midRangeProducts.filter(p => p.category.includes('men') || p.category.includes('sport') || p.category.includes('watch'));
-    } else if (lowerQuery.includes('tech') || lowerQuery.includes('gadget')) {
-      matched = midRangeProducts.filter(p => p.category.includes('laptop') || p.category.includes('phone') || p.category.includes('watch'));
-    } else if (lowerQuery.includes('style') || lowerQuery.includes('look')) {
-      matched = midRangeProducts.filter(p => p.category.includes('glass') || p.category.includes('jewel') || p.category.includes('dress'));
-    }
-
-    // Fallback to general mid-range if no specific match
-    const results = matched.length >= 2 ? matched.slice(0, 2) : midRangeProducts.slice(0, 2);
-
-    // 4. Dynamic Response Composition
-    const templates = {
-      discovery: [
-        `I've identified these mid-range selections that balance exceptional craftsmanship with accessibility. They align perfectly with your interest in ${lowerQuery.includes('gym') ? 'performance gear' : 'quality essentials'}.`,
-        `Based on our current catalog, these two pieces represent the "sweet spot" of our collection—offering pro-level specs at a refined price point.`,
-        `Analyzing our inventory for ${lowerQuery}... I recommend these balanced options that maintain our high standard of engineering.`
-      ],
-      decision_support: [
-        `Quality is our primary directive. These items are selected because they maintain high durability ratings while staying within a versatile mid-range budget.`,
-        `When evaluating value, I focus on long-term utility. These suggestions are frequently cited for exceeding user expectations in daily use.`
-      ],
-      comparison: [
-        `Comparing options for you. While we have entry-level and ultra-premium tiers, these mid-range selections offer the most comprehensive feature sets for the investment.`
-      ]
-    };
-
-    const pool = templates[intent as keyof typeof templates] || templates.discovery;
-    const responseText = pool[Math.floor(Math.random() * pool.length)];
-
-    return {
-      intent,
-      text: responseText,
-      suggestedProducts: results,
-      reasoning: `Synthesized from ${products.length} catalog items. Applied mid-range pricing filter ($20-$500) to ensure accessibility without compromising brand prestige.`,
-      actionItems: ["View Specifications", "Compare Features"]
-    };
   },
 
-  /**
-   * PDP Decision Support
-   */
-  async getProductInsights(product: Product, context: UserContext): Promise<{
-    summary: string;
-    pros: string[];
-    cons: string[];
-    fitReason: string;
-  }> {
-    await new Promise(r => setTimeout(r, 600));
+  async getProductInsights(product: any) {
+    try {
+      const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+      const prompt = `
+        You are a luxury shopping consultant. Analyze this product and return a JSON object:
+        Product: ${product.title}
+        Description: ${product.description}
 
+        JSON Structure:
+        {
+          "summary": "2-sentence high-end summary",
+          "pros": ["advantage 1", "advantage 2", "advantage 3"],
+          "cons": ["consideration 1", "consideration 2"],
+          "fitReason": "Why this fits a premium lifestyle"
+        }
+      `;
+      
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+      const startIdx = text.indexOf('{');
+      const endIdx = text.lastIndexOf('}');
+      return JSON.parse(text.substring(startIdx, endIdx + 1));
+    } catch (error) {
+      return {
+        summary: "An elite choice for the discerning collector. Part of our exclusive Lumina selection.",
+        pros: ["Premium Craftsmanship", "Limited Availability", "Timeless Design"],
+        cons: ["High Demand", "Selective Stock"],
+        fitReason: "Matches your preference for high-quality, verified products."
+      };
+    }
+  },
+
+  // Alias for Sidebar with full object support
+  async processCoPilotQuery(message: string, context?: any, history?: any) {
+    const result = await this.processMessage(message);
     return {
-      summary: `${product.title} represents a pinnacle of ${product.category} engineering. It's specifically tailored for users who demand professional results.`,
-      pros: ["Precision manufacturing", "High-efficiency materials", "Optimized user ergonomics"],
-      cons: ["Professional-grade learning curve", "High demand availability"],
-      fitReason: `This selection matches your preference for ${product.category}. It's currently one of the most reliable choices in the mid-to-high performance tier.`
+      text: result.response,
+      intent: result.intent,
+      reasoning: result.reasoning || "Optimizing your shopping journey.",
+      suggestedProducts: [] // This will be hydrated by the pipeline if intent is 'search'
     };
   }
 };

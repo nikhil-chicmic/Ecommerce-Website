@@ -63,7 +63,7 @@ export const RootLayout: React.FC = () => {
         <header className="app-header ai-glass-panel" style={{ 
           position: 'sticky', 
           top: 0, 
-          zIndex: 1000,
+          zIndex: 90,
           background: 'var(--glass-bg)',
           backdropFilter: 'blur(20px)',
           boxShadow: '0 1px 0 0 var(--border-color)',
@@ -74,7 +74,7 @@ export const RootLayout: React.FC = () => {
               <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)' }}>
                 <BrainCircuit size={20} color="white" />
               </div>
-              <span style={{ fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.04em', color: 'var(--text-primary)' }}>AIStore</span>
+              <span style={{ fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.04em', color: 'var(--text-primary)' }}>Lumina</span>
             </Link>
 
             <nav style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
@@ -132,7 +132,7 @@ export const RootLayout: React.FC = () => {
                 <div style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <BrainCircuit size={24} color="white" />
                 </div>
-                <span style={{ fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.04em', color: 'var(--text-primary)' }}>AIStore</span>
+                <span style={{ fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.04em', color: 'var(--text-primary)' }}>Lumina</span>
               </Link>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: '1.6', maxWidth: '300px' }}>
                 Engineering the next generation of commerce. Powered by state-of-the-art secure logistics.
@@ -168,7 +168,7 @@ export const RootLayout: React.FC = () => {
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '32px', borderTop: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.8125rem', fontWeight: 600 }}>
-            <p>&copy; {new Date().getFullYear()} AIStore Inc. Global fulfillment network operational.</p>
+            <p>&copy; {new Date().getFullYear()} Lumina Inc. Global fulfillment network operational.</p>
           </div>
         </div>
       </footer>

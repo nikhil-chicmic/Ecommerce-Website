@@ -1,23 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send } from 'lucide-react';
+import { Bot, X, Send, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { aiApi, type AIResponse } from '../api/aiApi';
+import type { RootState } from '../../../store';
 import '../styles/ai.css';
 
 interface Message {
   id: string;
   sender: 'user' | 'bot';
   text: string;
-  suggestions?: AIResponse['suggestedProducts'];
+  suggestions?: any[];
 }
 
 export const AIAssistant: React.FC = () => {
+  const { user } = useSelector((state: RootState) => state.auth);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', sender: 'bot', text: "Hi! I'm your AI Shopping Assistant. Tell me what you're looking for, and I'll find the best options for you!" }
+    { id: '1', sender: 'bot', text: "Hi! I'm your Lumina Concierge. Tell me what you're looking for, and I'll find the best options for you!" }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -25,9 +30,39 @@ export const AIAssistant: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Load chat history from Supabase on mount
   useEffect(() => {
-    if (isOpen) scrollToBottom();
-  }, [messages, isOpen]);
+    const loadHistory = async () => {
+      if (!user?.id) return;
+      
+      setIsInitialLoading(true);
+      try {
+        const history = await aiApi.getChatHistory(user.id);
+        if (history && history.length > 0) {
+          const formattedHistory: Message[] = history.map(h => ({
+            id: h.id,
+            sender: h.sender,
+            text: h.message,
+            suggestions: h.metadata?.products || []
+          }));
+          setMessages(formattedHistory);
+        }
+      } catch (err) {
+        console.error('Failed to load chat history:', err);
+      } finally {
+        setIsInitialLoading(false);
+        setTimeout(scrollToBottom, 100);
+      }
+    };
+
+    if (isOpen) {
+      loadHistory();
+    }
+  }, [user, isOpen]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -39,16 +74,23 @@ export const AIAssistant: React.FC = () => {
     setIsTyping(true);
 
     try {
-      const response = await aiApi.processIntent(userMsg.text);
+      const response = await aiApi.processIntent(userMsg.text, user?.id);
+      
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'bot',
         text: response.text,
         suggestions: response.suggestedProducts
       };
+
+      // Special handling for 'order' intent
+      if (response.intent === 'order') {
+        botMsg.text += " \n\nYou can track all your recent orders in your profile section.";
+      }
+
       setMessages(prev => [...prev, botMsg]);
     } catch (err) {
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'bot', text: 'Sorry, my neural net is a bit foggy right now. Try again?' }]);
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'bot', text: "I'm having a bit of trouble syncing with the Lumina database. Please try again." }]);
     } finally {
       setIsTyping(false);
     }
@@ -59,10 +101,12 @@ export const AIAssistant: React.FC = () => {
       <div className={`ai-chat-window ${isOpen ? 'open' : ''}`}>
         <div className="ai-header">
           <div className="ai-header-brand">
-            <img src="/logo.png" alt="AIStore Logo" style={{ height: '24px', width: 'auto', borderRadius: '4px' }} />
+            <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Bot size={20} color="white" />
+            </div>
             <div>
-              <h3>AI Assistant</h3>
-              <p><span style={{ display: 'inline-block', width: '6px', height: '6px', background: 'var(--status-success)', borderRadius: '50%' }}></span> Always Online</p>
+              <h3>Lumina Concierge</h3>
+              <p><span style={{ display: 'inline-block', width: '6px', height: '6px', background: 'var(--status-success)', borderRadius: '50%' }}></span> Online</p>
             </div>
           </div>
           <button 
@@ -74,36 +118,47 @@ export const AIAssistant: React.FC = () => {
         </div>
         
         <div className="ai-messages">
-          {messages.map(msg => (
-            <div key={msg.id} style={{ display: 'flex', flexDirection: 'column' }}>
-              <div className={`ai-msg ${msg.sender}`} style={msg.sender === 'bot' ? { display: 'flex', gap: '8px' } : {}}>
-                {msg.sender === 'bot' && (
-                  <img src="/logo.png" alt="" style={{ width: '24px', height: '24px', borderRadius: '4px', alignSelf: 'flex-end', marginBottom: '-4px' }} />
-                )}
-                <div style={{ flex: 1 }}>{msg.text}</div>
-              </div>
-              {msg.suggestions && msg.suggestions.length > 0 && (
-                <div style={{ marginTop: '8px', paddingLeft: msg.sender === 'bot' ? '32px' : '0' }}>
-                  {msg.suggestions.map(product => (
-                    <div 
-                      key={product.id} 
-                      className="ai-suggestion-card"
-                      onClick={() => navigate(`/product/${product.id}`)}
-                    >
-                      <img src={product.thumbnail} alt="" style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} />
-                      <div style={{ flex: 1, overflow: 'hidden' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{product.title}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--brand-primary)', fontWeight: 700 }}>${product.price}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {isInitialLoading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+              <Loader2 className="animate-spin" color="var(--brand-primary)" />
             </div>
-          ))}
+          ) : (
+            messages.map(msg => (
+              <div key={msg.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className={`ai-msg ${msg.sender}`} style={msg.sender === 'bot' ? { display: 'flex', gap: '8px' } : {}}>
+                  {msg.sender === 'bot' && (
+                    <div style={{ width: '24px', height: '24px', background: 'var(--brand-primary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, alignSelf: 'flex-end', marginBottom: '-4px' }}>
+                      <Bot size={14} color="white" />
+                    </div>
+                  )}
+                  <div style={{ flex: 1, whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+                </div>
+                {msg.suggestions && msg.suggestions.length > 0 && (
+                  <div style={{ marginTop: '8px', paddingLeft: msg.sender === 'bot' ? '32px' : '0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {msg.suggestions.map(product => (
+                      <div 
+                        key={product.id} 
+                        className="ai-suggestion-card"
+                        onClick={() => navigate(`/product/${product.id}`)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <img src={product.thumbnail} alt="" style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} />
+                        <div style={{ flex: 1, overflow: 'hidden' }}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{product.title}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--brand-primary)', fontWeight: 700 }}>${product.price}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
           {isTyping && (
             <div className="ai-msg bot" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <img src="/logo.png" alt="" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
+              <div style={{ width: '24px', height: '24px', background: 'var(--brand-primary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Bot size={14} color="white" />
+              </div>
               <div className="typing-indicator">
                 <div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" />
               </div>
@@ -116,18 +171,18 @@ export const AIAssistant: React.FC = () => {
           <input 
             type="text" 
             className="ai-input" 
-            placeholder="E.g., I need a cheap laptop..." 
+            placeholder="Search products or ask about orders..." 
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            disabled={isTyping}
+            disabled={isTyping || isInitialLoading}
           />
-          <button type="submit" className="ai-send-btn" disabled={!input.trim() || isTyping}>
+          <button type="submit" className="ai-send-btn" disabled={!input.trim() || isTyping || isInitialLoading}>
             <Send size={16} />
           </button>
         </form>
       </div>
 
-      <button className="ai-toggle-btn" onClick={() => setIsOpen(!isOpen)} title="Chat with AI">
+      <button className="ai-toggle-btn" onClick={() => setIsOpen(!isOpen)} title="Chat with Lumina Concierge">
         {isOpen ? <X size={28} /> : <Bot size={28} />}
       </button>
     </div>

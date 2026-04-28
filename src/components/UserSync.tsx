@@ -1,65 +1,26 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useQuery } from '@tanstack/react-query';
 import type { RootState } from '../store';
-import { setCart, setActiveUser } from '../features/cart/store/cartSlice';
-import { cartApi } from '../features/cart/api/cartApi';
-import { productApi } from '../features/products/api/productApi';
+import { syncCart } from '../features/cart/store/cartSlice';
+import type { AppDispatch } from '../store';
 
+/**
+ * UserSync Component
+ * 
+ * This component acts as a background manager for cart synchronization.
+ * It detects when a user logs in and triggers the cloud-sync thunk 
+ * to merge the local guest cart with the user's Supabase account.
+ */
 export const UserSync: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const isHydrating = useRef(false);
 
-  // Switch the active cart bucket when the user changes
   useEffect(() => {
-    dispatch(setActiveUser(isAuthenticated && user?.email ? user.email : 'guest'));
-  }, [isAuthenticated, user?.email, dispatch]);
-
-  // Fetch cart from Supabase when logged in
-  const { data: serverCart } = useQuery({
-    queryKey: ['cart', user?.id],
-    queryFn: () => cartApi.getCart(user!.id),
-    enabled: !!isAuthenticated && !!user?.id,
-  });
-
-  // Hydrate Redux state from server data
-  useEffect(() => {
-    if (serverCart && !isHydrating.current) {
-      isHydrating.current = true;
-      
-      const hydrate = async () => {
-        const hydratedItems = await Promise.all(
-          serverCart.map(async (item: any) => {
-            try {
-              const product = await productApi.getProductById(item.product_id);
-              return { ...product, quantity: item.quantity };
-            } catch (e) {
-              console.error(`Failed to hydrate product ${item.product_id}`, e);
-              return null;
-            }
-          })
-        );
-
-        const validItems = hydratedItems.filter(i => i !== null);
-        
-        dispatch(setCart({
-          items: validItems,
-          totalQuantity: validItems.reduce((acc, i) => acc + i.quantity, 0),
-          totalAmount: validItems.reduce((acc, i) => {
-             const price = i.discountPercentage 
-              ? i.price * (1 - i.discountPercentage / 100)
-              : i.price;
-            return acc + (price * i.quantity);
-          }, 0),
-        }));
-        
-        isHydrating.current = false;
-      };
-
-      hydrate();
+    if (isAuthenticated && user?.id) {
+      // Trigger the production-grade sync thunk
+      dispatch(syncCart(user.id));
     }
-  }, [serverCart, dispatch]);
+  }, [isAuthenticated, user?.id, dispatch]);
 
   return null;
 };

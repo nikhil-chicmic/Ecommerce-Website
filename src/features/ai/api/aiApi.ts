@@ -1,64 +1,73 @@
-import { productApi } from '../../products/api/productApi';
-import type { Product } from '../../products/types';
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+import axios from 'axios';
+import { geminiService } from '../services/geminiService';
+import { supabase } from '../../../lib/supabase';
 
 export interface AIResponse {
   text: string;
-  suggestedProducts?: Product[];
+  intent: 'search' | 'order' | 'chat';
+  suggestedProducts?: any[];
 }
 
 export const aiApi = {
-  async processIntent(query: string): Promise<AIResponse> {
-    await delay(1200); // Simulate AI thinking
+  // Main pipeline to process user intent and save history
+  async processIntent(message: string, userId?: string): Promise<AIResponse> {
+    // 1. Get structured intent from Gemini
+    const geminiData = await geminiService.processMessage(message);
+    
+    let suggestedProducts = [];
 
-    const q = query.toLowerCase();
-
-    // Intent Categories Mapping
-    const mappings = [
-      { keywords: ['cheap', 'budget', 'affordable', 'under', 'low price'], intent: 'budget', msg: "I've scanned our inventory and found some excellent budget-friendly options that don't compromise on quality." },
-      { keywords: ['phone', 'smartphone', 'mobile', 'iphone'], intent: 'smartphones', msg: "Looking for an upgrade? Here are our top-rated smartphones featuring cutting-edge AI chips." },
-      { keywords: ['laptop', 'computer', 'pc', 'macbook'], intent: 'laptops', msg: "Whether you need it for heavy rendering, gaming, or everyday work, these laptops are powerhouse machines." },
-      { keywords: ['gift', 'present', 'anniversary', 'birthday'], intent: 'fragrances', msg: "A luxury fragrance makes a perfect gift. I've selected some of our best-selling signature scents for you." },
-      { keywords: ['skincare', 'beauty', 'cream', 'serum'], intent: 'skincare', msg: "Self-care is important. Here are some premium skincare products highly rated by our community." },
-      { keywords: ['home', 'decoration', 'furniture'], intent: 'home-decoration', msg: "Elevate your living space with these beautiful, modern home decor pieces." },
-      { keywords: ['hello', 'hi', 'hey', 'help'], intent: 'greeting', msg: "Hello! I'm the AIStore Neural Assistant. You can ask me to find specific products, brands, or even gift recommendations based on your budget!" }
-    ];
-
-    let intentCategory = '';
-    let responseText = '';
-
-    for (const mapping of mappings) {
-      if (mapping.keywords.some(kw => q.includes(kw))) {
-        intentCategory = mapping.intent;
-        responseText = mapping.msg;
-        break;
+    // 2. If intent is search, fetch real products from API
+    if (geminiData.intent === 'search' && geminiData.query) {
+      try {
+        const response = await axios.get(`https://dummyjson.com/products/search?q=${geminiData.query}&limit=3`);
+        suggestedProducts = response.data.products;
+      } catch (err) {
+        console.error('Product fetch error in AI pipeline:', err);
       }
     }
 
-    if (intentCategory === 'greeting') {
-      return { text: responseText };
+    // 3. Save conversation to Supabase if user is logged in
+    if (userId) {
+      await this.saveChatHistory(userId, message, 'user', geminiData.intent);
+      await this.saveChatHistory(
+        userId, 
+        geminiData.response, 
+        'bot', 
+        geminiData.intent, 
+        suggestedProducts.length > 0 ? { products: suggestedProducts } : null
+      );
     }
 
-    if (!intentCategory) {
-      // Advanced Semantic Search Simulation Fallback
-      const { products } = await productApi.getProducts(0, 3, { search: query });
-      return {
-        text: products.length > 0 
-          ? `I couldn't find an exact category, but my neural net matched these ${products.length} specific items to your query.` 
-          : "I couldn't find exactly what you're looking for in our current database. Could you try describing it with different keywords?",
-        suggestedProducts: products,
-      };
-    }
+    return {
+      text: geminiData.response,
+      intent: geminiData.intent,
+      suggestedProducts
+    };
+  },
 
-    // Fetch intent-based categories
-    if (intentCategory === 'budget') {
-      const { products } = await productApi.getProducts(0, 100, {});
-      const cheapProducts = products.filter(p => p.price < 50).slice(0, 3);
-      return { text: responseText, suggestedProducts: cheapProducts };
+  async saveChatHistory(userId: string, message: string, sender: 'user' | 'bot', intent?: string, metadata?: any) {
+    try {
+      await supabase.from('chat_history').insert({
+        user_id: userId,
+        sender,
+        message,
+        intent,
+        metadata
+      });
+    } catch (err) {
+      console.error('Failed to save chat history:', err);
     }
+  },
 
-    const { products } = await productApi.getProducts(0, 4, { category: intentCategory });
-    return { text: responseText, suggestedProducts: products };
+  async getChatHistory(userId: string) {
+    const { data, error } = await supabase
+      .from('chat_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(50);
+    
+    if (error) throw error;
+    return data;
   }
 };

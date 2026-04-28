@@ -1,7 +1,15 @@
 import type { Product } from '../../products/types';
 
-export interface CartItem extends Product {
+export interface CartItem {
+  id: string | number;
+  title: string;
+  price: number;
+  thumbnail: string;
   quantity: number;
+  // Optional extra metadata from Product
+  description?: string;
+  category?: string;
+  discountPercentage?: number;
 }
 
 export interface CartData {
@@ -11,7 +19,8 @@ export interface CartData {
 }
 
 export interface CartState {
-  carts: Record<string, CartData>; // Keyed by user email or 'guest'
-  isCartOpen: boolean;
-  activeUserKey: string; // The currently active user's email, or 'guest'
+  items: CartItem[];
+  isOpen: boolean;
+  isLoading: boolean;
+  error: string | null;
 }
