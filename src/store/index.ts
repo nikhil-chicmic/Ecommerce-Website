@@ -1,7 +1,7 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
 import localforage from 'localforage';
-import { ENV } from '../config/env';
+import { ENV } from '../config/env.ts';
 import { authReducer } from '../features/auth/store/authSlice';
 import { cartReducer } from '../features/cart/store/cartSlice';
 import { orderReducer } from '../features/payment/store/orderSlice';

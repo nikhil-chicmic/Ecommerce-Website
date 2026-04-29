@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ENV } from '../../../config/env';
+import { ENV } from '../../../config/env.ts';
 
 const genAI = new GoogleGenerativeAI(ENV.GEMINI_API_KEY);
 const MODEL_NAME = "gemini-1.5-flash";
@@ -13,7 +13,7 @@ export const geminiService = {
         // We fetch the live categories from the store to see what we actually sell
         const catRes = await fetch('https://dummyjson.com/products/categories');
         const categories = await catRes.json(); // Array of { slug, name, url }
-        const categoryNames = categories.map((c: any) => c.slug.toLowerCase());
+        const categoryNames = categories.map((c: { slug: string }) => c.slug.toLowerCase());
 
         // 2. DETECT SHOPPING INTENT (Dynamic)
         // Check if the message contains any of our live categories or shopping verbs
