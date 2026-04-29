@@ -1,4 +1,4 @@
-import { ENV } from '../config/env.ts';
+import { ENV } from '../config/env';
 
 type LogLevel = 'info' | 'warn' | 'error';
 

@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ENV } from '../../../config/env.ts';
+import { ENV } from '../../../config/env';
 
 const genAI = new GoogleGenerativeAI(ENV.GEMINI_API_KEY);
 const MODEL_NAME = "gemini-1.5-flash";
@@ -19,7 +19,7 @@ export const geminiService = {
         // Check if the message contains any of our live categories or shopping verbs
         const shoppingVerbs = ['buy', 'search', 'find', 'show', 'need', 'want', 'get', 'price', 'check', 'available'];
         const isShoppingVerb = shoppingVerbs.some(verb => rawQuery.includes(verb));
-        const isCategoryMatch = categoryNames.some(cat => rawQuery.includes(cat) || rawQuery.includes(cat.slice(0, -1))); // handle basic plurals
+        const isCategoryMatch = categoryNames.some((cat: string) => rawQuery.includes(cat) || rawQuery.includes(cat.slice(0, -1))); // handle basic plurals
 
         if (!isShoppingVerb && !isCategoryMatch && rawQuery.length > 5) {
             return {
